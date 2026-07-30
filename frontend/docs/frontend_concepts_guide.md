@@ -356,5 +356,137 @@ When you run `npm run dev` or `npm run build`:
     ```
 6.  It aggregates these definitions and builds them into the final CSS stylesheet. Unused Tailwind classes (e.g., `text-red-500` if not used anywhere in code) are completely omitted from the output.
 
+---
+
+## 9. Enterprise React Project Architecture
+
+For a large-scale application like **SyncForge AI**, organizing code logically is critical for development speed, maintenance, and scale. We adopt an **enterprise-grade, module-based folder structure** that divides responsibilities cleanly.
+
+### Visual Representation of the Project Structure
+
+```
+src/
+├── assets/         # Raw static media assets
+│   ├── images/
+│   ├── icons/
+│   └── fonts/
+├── components/     # Reusable UI component blocks
+│   ├── common/     # Global layout components (Header, Sidebar, etc.)
+│   ├── layout/     # Reusable structural components (Grid, Stack, etc.)
+│   └── ui/         # Base atomic design primitives (Button, Modal, etc.)
+├── pages/          # Individual screen routing components
+├── features/       # Feature-sliced modules (business logic + UI)
+├── hooks/          # Global custom React hooks
+├── services/       # Network layers, API client handlers
+├── store/          # Global Redux state manager setup
+├── routes/         # Router declarations (public, protected)
+├── layouts/        # Frame structures enclosing pages
+├── context/        # Lightweight global state providers
+├── styles/         # Global stylesheets and animations
+├── types/          # Shared TypeScript type definitions
+├── utils/          # Standalone pure helper functions
+├── constants/      # App constants, configuration keys
+└── config/         # System configurations (Axios, Env)
+```
+
+---
+
+### Folder-by-Folder Breakdown
+
+#### 1. `assets/`
+*   **Why it exists:** To store unprocessed static files like images, fonts, and icons that will be compiled and optimized by the bundler.
+*   **What belongs there:** Logos (`.png`, `.svg`), brand graphics, custom fonts (`.woff2`), general SVGs.
+*   **What should NEVER be placed there:** CSS files, React components, JSON configurations.
+*   **Real-world example:** `assets/images/syncforge-logo.svg`
+
+#### 2. `components/`
+*   **Why it exists:** To hold reusable, presentational UI pieces that do not have their own standalone route.
+*   **Subfolders:**
+    *   `common/`: Reusable components (e.g., standard custom layout parts like `Header`, `Sidebar`, `Footer`).
+    *   `ui/`: Base design system primitives (e.g., generic `Button`, `Input`, `Modal`, `Dropdown`).
+    *   `layout/`: Reusable layouts (e.g., `Grid`, `Stack`, `Container`).
+*   **What belongs there:** Stateless or minimal-state UI pieces that are generic and can be used across multiple pages.
+*   **What should NEVER be placed there:** Complete page templates, business logic, API requests, routing components.
+*   **Real-world example:** `components/ui/Button.tsx`
+
+#### 3. `pages/`
+*   **Why it exists:** To host components that correspond directly to browser routes (the main screens of the app).
+*   **What belongs there:** Route components that gather different features and layouts together.
+*   **What should NEVER be placed there:** Reusable low-level buttons, global store setup, API calling functions.
+*   **Real-world example:** `pages/DashboardPage.tsx` or `pages/LoginPage.tsx`
+
+#### 4. `features/`
+*   **Why it exists:** Organizes code by business modules (feature-driven) rather than technical file types. It group components, hooks, slices, and services that belong to a single domain context together.
+*   **What belongs there:** Sub-directories per module (e.g., `features/auth/`, `features/analytics/`, `features/ai-assistant/`), containing module-specific UI, endpoints, and states.
+*   **What should NEVER be placed there:** Highly generic utilities or base components like a generic `Spinner` or `Button` (they belong in `components/ui/`).
+*   **Real-world example:** `features/auth/components/LoginForm.tsx`, `features/auth/store/authSlice.ts`, `features/auth/services/authApi.ts`
+
+#### 5. `hooks/`
+*   **Why it exists:** To house custom React hooks that isolate and reuse stateful UI logic.
+*   **What belongs there:** Reusable logic utilities leveraging React hooks (e.g., `useLocalStorage`, `useDebounce`, `useTheme`).
+*   **What should NEVER be placed there:** CSS styles, React UI components, raw API client declarations.
+*   **Real-world example:** `hooks/useLocalStorage.ts` (enables saving state variables automatically to localStorage).
+
+#### 6. `services/`
+*   **Why it exists:** To act as the server-communication boundary. It abstracts API requests away from components.
+*   **What belongs there:** Axios client instances, API calls wrapper, SDK integrations.
+*   **What should NEVER be placed there:** React components, state hooks, CSS stylesheets.
+*   **Real-world example:** `services/apiClient.ts`, `services/authService.ts`
+
+#### 7. `store/`
+*   **Why it exists:** Configures our global application state management using Redux Toolkit.
+*   **What belongs there:** Redux store setup (`store.ts`), root reducers, global slices (e.g., `uiSlice.ts`), custom Redux middleware.
+*   **What should NEVER be placed there:** Component views, HTTP request definitions, utility functions.
+*   **Real-world example:** `store/index.ts` (the central Redux store configurations).
+
+#### 8. `routes/`
+*   **Why it exists:** Defines the navigation tree and path mapping of the entire app.
+*   **What belongs there:** Route definitions, route guarding components (e.g., `PrivateRoute`, `PublicOnlyRoute`), navigation config mappings.
+*   **What should NEVER be placed there:** Visual components, Redux reducers.
+*   **Real-world example:** `routes/AppRoutes.tsx`
+
+#### 9. `layouts/`
+*   **Why it exists:** To provide common layout frames wrapping groups of routes (e.g. sidebar and header layouts).
+*   **What belongs there:** Layout frames containing `<Outlet />` tags from React Router.
+*   **What should NEVER be placed there:** Page-specific forms, database logic, store declarations.
+*   **Real-world example:** `layouts/DashboardLayout.tsx` (adds the persistent sidebar and topbar surrounding all dashboard inner pages).
+
+#### 10. `context/`
+*   **Why it exists:** Holds React Context providers for lightweight, tree-wide state variables that do not require the heavyweight Redux structure.
+*   **What belongs there:** Context providers (e.g., `ThemeContext`, `SidebarToggleContext`).
+*   **What should NEVER be placed there:** Large business domain state trees (use Redux).
+*   **Real-world example:** `context/ThemeContext.tsx` (switches light/dark colors app-wide).
+
+#### 11. `styles/`
+*   **Why it exists:** To centralize stylesheets, design tokens, and utility animations.
+*   **What belongs there:** Global css variables, Tailwind style overrides, animation frames.
+*   **What should NEVER be placed there:** Reusable components, state slices.
+*   **Real-world example:** `styles/animations.css`
+
+#### 12. `types/`
+*   **Why it exists:** Centralizes TypeScript definitions (`interfaces`, `types`, `enums`) shared across multiple modules.
+*   **What belongs there:** Common schema definitions (e.g., `User.ts`, `SyncJob.ts`, `ApiResponse.ts`).
+*   **What should NEVER be placed there:** Component code, run-time variables, functions.
+*   **Real-world example:** `types/index.ts` or `types/sync.ts`
+
+#### 13. `utils/`
+*   **Why it exists:** To store pure helper functions that execute standalone actions.
+*   **What belongs there:** Formatting utilities, math helpers, validation parsers (e.g., date formats, currency parsers).
+*   **What should NEVER be placed there:** Stateful hooks, React components, Redux action dispatchers.
+*   **Real-world example:** `utils/formatDate.ts` (formats raw database timestamps like `2026-07-30T11:34:00Z` to `July 30, 2026`).
+
+#### 14. `constants/`
+*   **Why it exists:** Stores configuration parameters or strings that are completely static.
+*   **What belongs there:** Route path strings, API endpoint names, error messages, static dropdown options.
+*   **What should NEVER be placed there:** Computable functions, variables that change state at runtime.
+*   **Real-world example:** `constants/routes.ts` (e.g., `export const DASHBOARD_ROUTE = '/dashboard'`).
+
+#### 15. `config/`
+*   **Why it exists:** To hold system configurations and build-time configurations.
+*   **What belongs there:** Environment variable exports, Axios config instances, third-party provider initializations.
+*   **What should NEVER be placed there:** Application state, styles, reusable layouts.
+*   **Real-world example:** `config/env.ts` (sanitizes and exports environment flags).
+
+
 
 
