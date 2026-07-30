@@ -487,6 +487,143 @@ src/
 *   **What should NEVER be placed there:** Application state, styles, reusable layouts.
 *   **Real-world example:** `config/env.ts` (sanitizes and exports environment flags).
 
+---
+
+## 10. SyncForge AI Design System & Component Library
+
+A **Design System** is a unified language of tokens (colors, typography, margins) and atomic components (buttons, input boxes) that ensures interface consistency, speed of development, and accessibility.
+
+---
+
+### 1. Token Systems
+
+#### A. Color System
+Our color tokens are declared in `tailwind.config.js` and serve specific visual roles:
+*   **Primary (`primary-50` to `primary-900`)**: Deep Violet brand colors. Represents the primary user journey, core actions, and connection lines.
+*   **Accent (`accent-50` to `accent-500`)**: Fuchsia/Lavender tones representing AI-assisted components, suggestions, and helper tags.
+*   **Success (`success-500` / `success-600`)**: Green tints for fully synced pipelines, operational servers, and successful test logs.
+*   **Warning (`warning-500` / `warning-600`)**: Yellow/Amber indicators for active syncing states, sync delays, or warning flags.
+*   **Error (`error-500` / `error-600`)**: Red accents representing connection dropouts, authentication failures, and critical sync errors.
+*   **Info (`info-500` / `info-600`)**: Sky blue colors representing informational state logs, configuration tips, and guides.
+*   **Neutrals (`slate-50` to `slate-900`)**: Controls our background surfaces, text lines, card borders, and dark modes.
+
+#### B. Typography System
+Consistent font scales keep details readable and organized. Font sizes are set relative to root EM (`rem`) units:
+*   **Display**: `3.75rem / 60px` (Font weight 800) – Hero banners.
+*   **H1**: `2.25rem / 36px` (Font weight 700) – Top-level page titles.
+*   **H2**: `1.5rem / 24px` (Font weight 600) – Main card headers.
+*   **H3**: `1.25rem / 20px` (Font weight 600) – Subsection labels.
+*   **H4**: `1rem / 16px` (Font weight 600) – Form sub-headers.
+*   **Body Large**: `1.125rem / 18px` (Font weight 400) – Introductory text paragraphs.
+*   **Body**: `0.875rem / 14px` (Font weight 400) – General UI copy, descriptions, input texts.
+*   **Small**: `0.75rem / 12px` (Font weight 500) – Metadata, helper hints.
+*   **Caption**: `0.625rem / 10px` (Font weight 600, uppercase) – Badge tag strings.
+
+#### C. Spacing System
+Consistent spacing prevents messy layouts. We use Tailwind's multiplier scale:
+*   **Tight (4px - 8px / `space-1` to `space-2`)**: For connecting small related items (e.g. Label below Input, Icon next to Button text).
+*   **Regular (12px - 16px / `space-3` to `space-4`)**: For grid gaps, inside padding of buttons, list row separations.
+*   **Loose (24px - 32px / `space-6` to `space-8`)**: For margin splits between visual cards, main page container padding.
+
+#### D. Border Radius System
+*   **Small (`rounded-md` / 6px)**: For atomic indicators like checkboxes and badge borders.
+*   **Medium (`rounded-xl` / 12px)**: For buttons, text input containers, and sidebar links.
+*   **Large (`rounded-2xl` / 16px)**: For container frames, dashboard widgets, and popup modals.
+*   **Full (`rounded-full` / 999px)**: For circles (status badges, user avatars, toggle switches).
+
+#### E. Shadows System
+*   **Small (`shadow-sm`)**: Gives cards a subtle outline separator.
+*   **Medium (`shadow-md`)**: Elevates hovered buttons and small popup menus.
+*   **Large (`shadow-xl`)**: Separates critical overlay panels (e.g. settings modals, dropdown panels).
+
+---
+
+### 2. Component Guidelines
+
+#### A. Button Component
+*   **Purpose:** Triggers actions on click.
+*   **Props:**
+    *   `variant`: Style version (`primary`, `secondary`, `outline`, `ghost`, `danger`).
+    *   `size`: Height scale (`sm`, `md`, `lg`).
+    *   `isLoading`: Controls busy spinner.
+    *   `leftIcon` / `rightIcon`: Placed SVG icons.
+*   **Example:**
+    ```tsx
+    <Button variant="primary" size="md" isLoading={false} leftIcon={<PlayIcon />}>
+      Run Sync Pipeline
+    </Button>
+    ```
+*   **Best Practices:** Always specify `type="submit"` or `type="button"` explicitly to prevent form collision.
+*   **Common Mistakes:** Wrapping icons directly inside button tags without appropriate padding; use `leftIcon` or `rightIcon` props instead.
+*   **Accessibility:** Has default focus outline tags, handles disabled pointer states, and updates `aria-busy` and `aria-disabled` when loading.
+
+#### B. Input Component
+*   **Purpose:** Captures string data from users.
+*   **Props:**
+    *   `label`: Field title text.
+    *   `error`: Text shown when field input is invalid.
+    *   `helperText`: Text shown below input for guidelines.
+    *   `leftIcon` / `rightIcon`: Interactive/decorative icons inside inputs.
+*   **Example:**
+    ```tsx
+    <Input label="Database Host" error="" helperText="Enter the server URL" placeholder="localhost" />
+    ```
+*   **Best Practices:** Pair with a clear placeholder matching the input data format.
+*   **Common Mistakes:** Hardcoding `id` tags when using multiple inputs; the Input component automatically generates unique IDs.
+*   **Accessibility:** Links label automatically with input ID using `htmlFor`. Sets `aria-invalid="true"` when error matches.
+
+#### C. Card Component
+*   **Purpose:** Groups related information visually.
+*   **Props:**
+    *   `hoverable`: If true, displays scaling animations on hover.
+*   **Example:**
+    ```tsx
+    <Card hoverable>
+      <Card.Header><h4>PostgreSQL Database</h4></Card.Header>
+      <Card.Content><p>Active Sync Schedule: Hourly</p></Card.Content>
+      <Card.Footer><Button size="sm">Configure</Button></Card.Footer>
+    </Card>
+    ```
+*   **Best Practices:** Use compound layout blocks (`Card.Header`, `Card.Content`, `Card.Footer`) to maintain consistent alignment.
+*   **Common Mistakes:** Inserting custom paddings inside Card sub-components which breaks spacing.
+
+#### D. Badge Component
+*   **Purpose:** Visual indicator of state/status.
+*   **Props:**
+    *   `variant`: Colors (`primary`, `success`, `warning`, `error`, `info`, `neutral`).
+    *   `size`: Scale (`sm`, `md`).
+*   **Example:**
+    ```tsx
+    <Badge variant="success" size="md">Running</Badge>
+    ```
+
+#### E. Spinner Component
+*   **Purpose:** Visual loading progress indicator.
+*   **Props:**
+    *   `size`: Dimensions (`sm`, `md`, `lg`).
+    *   `color`: Colors (`primary`, `secondary`, `white`).
+*   **Example:**
+    ```tsx
+    <Spinner size="md" color="primary" />
+    ```
+*   **Accessibility:** Employs a hidden `sr-only` span: `<span className="sr-only">Loading...</span>` for screen readers.
+
+#### F. Divider Component
+*   **Purpose:** Splits page layouts or form divisions.
+*   **Props:**
+    *   `orientation`: (`horizontal` | `vertical`).
+    *   `label`: Centered string label in horizontal dividers.
+*   **Example:**
+    ```tsx
+    <Divider label="or sign in with" />
+    ```
+
+---
+
+### 3. Theme Setup & Dark Mode Readiness
+All built components use background and text rules configured for dark mode queries (e.g. `bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800`). When we activate a dark-mode switcher later in the sprint, components will automatically invert colors.
+
+
 
 
 
