@@ -679,6 +679,61 @@ We employ Tailwind's grid layout and hide/show utility utilities corresponding t
 *   **Mobile / Tablet (`< 1024px`)**: The desktop `Sidebar` is completely hidden (`hidden lg:flex`). Hamburger links appear in the `Navbar` to reveal the `MobileDrawer` backdrop layout.
 *   **Desktop (`>= 1024px`)**: The mobile hamburger button is hidden (`lg:hidden`). The collapsible desktop `Sidebar` is pinned to the left layout margin.
 
+---
+
+## 12. Single-Page Application Routing & Performance Optimization
+
+To coordinate layout transitions and page selections without reloading the web page, we use **React Router DOM**. We also implement dynamic **bundle splitting (lazy loading)** to keep initial load times minimal.
+
+---
+
+### 1. Centralized Route Management
+
+#### A. Route Constants (`src/routes/routePaths.ts`)
+Instead of using inline string paths (like `"/analytics"`) throughout components, we centralize them:
+```typescript
+export const ROUTE_PATHS = {
+  LOGIN: '/login',
+  DASHBOARD: '/',
+  PROBLEMS: '/problems',
+  ANALYTICS: '/analytics',
+  AI_ASSISTANT: '/ai-assistant',
+  NOTES: '/notes',
+  REPOSITORIES: '/repositories',
+  PROFILE: '/profile',
+  SETTINGS: '/settings',
+} as const;
+```
+*   **Why?**
+    1.  **Prevents Typos:** Hardcoded strings are prone to spelling errors (e.g. `"/analitics"` vs `"/analytics"`). Route constants cause compile-time TypeScript errors if misspelled.
+    2.  **Single Source of Truth:** If we decide to update the URL path for settings from `"/settings"` to `"/user/settings"`, we only edit one line in `routePaths.ts` rather than searching and replacing it in dozens of component links.
+
+#### B. Route Guards (Protected vs. Public Routes)
+*   **Protected Routes (`ProtectedRoute.tsx`)**: Intercepts unauthenticated users attempting to access dashboards or settings and redirects them to the `ROUTE_PATHS.LOGIN` page.
+*   **Public Routes (`PublicRoute.tsx`)**: Intercepts authenticated users trying to view the `ROUTE_PATHS.LOGIN` screen and redirects them back to the `ROUTE_PATHS.DASHBOARD`.
+*   **Why Route Guards?** Route guards enforce client-side navigation constraints before rendering views. This keeps user interfaces safe and encapsulates authentication routing checks in modular wrapper components.
+
+---
+
+### 2. Code Splisting & Performance
+
+#### A. Lazy Loading (`React.lazy()`)
+By default, React builds code into a single, massive JavaScript file. If a user visits the Login screen, they still download the Javascript for the entire Analytics panel, slowing down the initial page paint.
+```typescript
+const DashboardPage = lazy(() => import('../pages/Dashboard'));
+```
+*   **Why?** We wrap each page component inside `lazy()`. This instructs the bundler to split the page code into separate Javascript files (chunks). The browser will only download the code for the specific page the user navigates to.
+
+#### B. React Suspense & Page Loaders
+When a user navigates to a new page (e.g. clicks from Dashboard to Analytics), there will be a brief delay while the browser fetches the page's chunk over the network.
+*   **Why?** We wrap our layout routes in a `<Suspense>` boundary. While the chunk loads, Suspense intercepts the render and displays our custom `PageLoader` spinner. This handles asynchronous file loading states gracefully.
+
+```
+Routing Chunk Execution Flow:
+[Click Analytics] ---> [React Router triggers lazy load] ---> [Suspense shows PageLoader] ---> [Chunk downloads] ---> [Analytics Page mounts]
+```
+
+
 
 
 
