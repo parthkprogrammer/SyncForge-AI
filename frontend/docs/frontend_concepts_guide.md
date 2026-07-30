@@ -733,6 +733,34 @@ Routing Chunk Execution Flow:
 [Click Analytics] ---> [React Router triggers lazy load] ---> [Suspense shows PageLoader] ---> [Chunk downloads] ---> [Analytics Page mounts]
 ```
 
+---
+
+## 13. Authentication User Interface Design
+
+We have established a responsive, production-ready **Authentication UI** dedicated to securing **SyncForge AI** workspaces via GitHub OAuth.
+
+### 1. Structural Layout & Marketing Panels
+
+#### A. Dedicated Auth Layout (`src/layouts/AuthLayout.tsx`)
+We split the screen into two parts on desktop sizes:
+*   **Left Marketing Panel (Desktop Only)**: A SaaS marketing dashboard showcasing key platform strengths (Syncing, AI code analysis, revision notes, performance analytics). Styled with dark metallic gradient backgrounds (`bg-slate-950`) to establish a premium feel.
+*   **Right Access Card**: A clean, light-colored background dedicated purely to credentials entry and sign-in operations.
+
+#### B. Component Composition
+*   **`GitHubLoginButton` (`src/components/auth/GitHubLoginButton.tsx`)**: Renders a custom vector SVG GitHub icon. Evaluates loading states and disabled conditions automatically.
+*   **`FeatureList` (`src/components/auth/FeatureList.tsx`)**: Uses Framer Motion's `staggerChildren` staggering animations to smoothly fade in our core value propositions sequentially upon loading.
+*   **`ErrorAlert` (`src/components/auth/ErrorAlert.tsx`)**: Integrates alerts indicating network timeouts or access denials. Displays an exit transition using Framer Motion's `<AnimatePresence>`.
+
+---
+
+### 2. Micro-state Integrations & Dev Sandbox
+
+Since the Spring Boot OAuth backend is built during later phases, we model visual login state changes client-side inside [LoginPage.tsx](file:///d:/SyncForge-AI/frontend/src/pages/Login/LoginPage.tsx):
+*   **Button Loading**: Clicking the button sets `isLoading` to true. The button text changes to `"Connecting..."` and mounts a small loading spinner.
+*   **Error Mocking**: After a 2-second timeout, the loading state ends, and we set a mock string error: `"Unable to connect. Please try again later."`.
+*   **Dismissal**: Users can click the Close (`X`) button on the error panel to reset the state, enabling seamless iteration and verification of both positive and negative visual feedback.
+
+
 
 
 
