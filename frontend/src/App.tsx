@@ -1,34 +1,49 @@
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, useOutletContext } from 'react-router-dom';
+import { AppLayout } from './layouts/AppLayout';
+
+// A simple placeholder page component that displays the currently active sidebar navigation item
+function PlaceholderPage() {
+  const context = useOutletContext<{ activeNavItem: string }>() || { activeNavItem: 'dashboard' };
+  const { activeNavItem } = context;
+  
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 bg-white dark:bg-slate-900 shadow-sm">
+      {/* Mock Vector Illustration */}
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-950/10 text-primary-500 mb-4 ring-4 ring-primary-500/5">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-8 w-8 animate-pulse"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M21 12H3M12 3v18" />
+        </svg>
+      </div>
+      
+      <h2 className="text-2xl font-bold capitalize text-slate-800 dark:text-white tracking-tight">
+        {activeNavItem.replace('-', ' ')} View
+      </h2>
+      <p className="text-xs text-slate-400 mt-2 text-center max-w-sm leading-relaxed">
+        This is a temporary placeholder screen. The modular React Router layout and application shell are successfully configured and responsive.
+      </p>
+    </div>
+  );
+}
 
 function App() {
-  const [clicked, setClicked] = useState(false);
-
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100 flex flex-col items-center">
-        {/* Centered Title */}
-        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight text-center">
-          SyncForge AI
-        </h1>
-        
-        {/* Small Description */}
-        <p className="text-slate-500 text-sm text-center mt-3 leading-relaxed">
-          Tailwind CSS has been successfully configured. This is a clean, minimal container verifying our utility classes.
-        </p>
-
-        {/* Primary Button */}
-        <button
-          onClick={() => setClicked(!clicked)}
-          className={`mt-6 px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-lg shadow-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-            clicked 
-              ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-          }`}
-        >
-          {clicked ? 'Connected!' : 'Test Connection'}
-        </button>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AppLayout />}>
+          <Route index element={<PlaceholderPage />} />
+          <Route path="*" element={<PlaceholderPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

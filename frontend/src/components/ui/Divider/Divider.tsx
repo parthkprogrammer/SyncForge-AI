@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { DividerProps } from './Divider.types';
+import type { DividerProps } from './Divider.types';
 import { cn } from '../../../utils/cn';
 
 export const Divider = forwardRef<HTMLDivElement, DividerProps>(

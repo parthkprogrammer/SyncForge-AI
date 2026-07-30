@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { SpinnerProps } from './Spinner.types';
+import type { SpinnerProps } from './Spinner.types';
 import { cn } from '../../../utils/cn';
 
 export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(

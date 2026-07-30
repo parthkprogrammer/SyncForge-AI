@@ -1,5 +1,5 @@
 import { forwardRef, useId } from 'react';
-import { InputProps } from './Input.types';
+import type { InputProps } from './Input.types';
 import { cn } from '../../../utils/cn';
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(

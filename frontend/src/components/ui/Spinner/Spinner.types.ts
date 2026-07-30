@@ -1,4 +1,4 @@
-import { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
 
 export type SpinnerSize = 'sm' | 'md' | 'lg';
 export type SpinnerColor = 'primary' | 'secondary' | 'white';

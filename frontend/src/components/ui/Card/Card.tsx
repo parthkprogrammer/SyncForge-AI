@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { CardProps, CardHeaderProps, CardContentProps, CardFooterProps } from './Card.types';
+import type { CardProps, CardHeaderProps, CardContentProps, CardFooterProps } from './Card.types';
 import { cn } from '../../../utils/cn';
 
 // Root Card Component
