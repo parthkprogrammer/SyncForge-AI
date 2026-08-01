@@ -760,6 +760,58 @@ Since the Spring Boot OAuth backend is built during later phases, we model visua
 *   **Error Mocking**: After a 2-second timeout, the loading state ends, and we set a mock string error: `"Unable to connect. Please try again later."`.
 *   **Dismissal**: Users can click the Close (`X`) button on the error panel to reset the state, enabling seamless iteration and verification of both positive and negative visual feedback.
 
+---
+
+## 14. Dashboard Analytics & Component-Driven Architectures
+
+We built a data-driven, modular developer dashboard.
+
+### 1. Key React & TypeScript Concepts
+
+#### A. Component Composition
+The dashboard is built by composing multiple highly focused widgets. The page container (`DashboardPage.tsx`) acts as the state manager and layout shell, while child components (like `StatCard`, `DifficultyBreakdown`, `RecentSubmissions`) focus purely on rendering their specific datasets.
+*   **Benefits:** Easier debugging (if the chart breaks, only `WeeklyActivityChart` needs inspection), clean code splitting, and extreme file readability (under 120 lines of JSX per file).
+
+#### B. Array mapping (`.map()`) and dynamic list iteration
+Instead of writing 4 stat card tags manually in JSX, we hold the stats data structure inside an array and render them dynamically using Javascript `.map()`:
+```tsx
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+  {stats.map((stat) => (
+    <StatCard key={stat.id} stat={stat} />
+  ))}
+</div>
+```
+*   **Why?**
+    1.  **Prevents Code Redundancy:** Reduces HTML/CSS copy-pasting.
+    2.  **Scalable:** If we add a fifth statistic (e.g. "Total Code Commits"), we simply add one object to our data array in the mock file, and the UI automatically renders it without any code edits in `DashboardPage.tsx`.
+    3.  **Keys:** React uses the `key` prop during rendering to identify which items have changed, been added, or been removed, which prevents redundant DOM updates.
+
+#### C. Separation of Mock Data from UI
+We saved our default values in a separate directory: `src/features/dashboard/data/dashboardMockData.ts`.
+*   **Why?** Components should remain "pure presentation" shells. Hardcoding values directly inside a component makes it difficult to substitute the values when we connect Spring Boot REST APIs later. By passing data through parent component props, we can substitute our local mock imports with an Axios network payload without editing the visual components.
+
+---
+
+### 2. Skeletons and Empty States
+
+#### A. Perceived Performance (Skeleton loaders vs. Spinners)
+We added `DashboardSkeleton.tsx` using Tailwind's `animate-pulse` classes.
+*   **Perceived Speed:** Traditional loading spinners make users focus on the delay, making it feel slower. Skeletons draw empty representations of the final UI layout. This informs the user about what layout grid to expect and makes the page load feel instantaneous.
+
+#### B. Empty States (`EmptyState.tsx`)
+Displays when no records match. Instead of rendering blank cards or empty page blocks, an Empty State gives users a clean illustration, explains why the panel is empty, and provides a clear Call to Action (CTA) like `"Learn How Sync Works"`.
+
+---
+
+### 3. Recharts Basics
+Recharts compiles interactive charts using declarative React elements:
+*   **`ResponsiveContainer`**: Automatically reads container parent widths/heights, resizing charts instantly to fit mobile or large screen monitors.
+*   **`BarChart`**: Orchestrates data collections.
+*   **`XAxis` / `YAxis`**: Plots dates, weekdays, or quantities.
+*   **`Tooltip`**: Renders dynamic popup overlays on hover. We override standard layouts to inject clean dark-mode styled cards.
+*   **`dataKey`**: Tells Recharts which property name in our array object represents the value to render.
+
+
 
 
 
