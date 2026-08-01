@@ -1063,6 +1063,70 @@ When connecting to a Spring Boot backend:
 2.  **REST APIs:** The frontend will replace local CRUD methods inside `useNotes` with Axios requests (`POST /api/v1/notes` for creations, `PUT /api/v1/notes/{id}` for edits, etc.).
 3.  **JPA & Hibernate:** The Spring Boot API will validate notes schemas server-side, persist modifications in PostgreSQL, and return updated records to the client.
 
+---
+
+## 19. GitHub Repository Settings & Folder Organization Previews
+
+We built a repositories management workspace enabling configuration settings for syncing accepted coding solutions to target GitHub repositories.
+
+### 1. Controlled Forms, React Hook Form, and Zod
+
+For local mock repository creation, we use Zod schemas linked to React Hook Form for client validations:
+```typescript
+const repoSchema = z.object({
+  name: z.string()
+    .min(3, 'Repository name must be at least 3 characters')
+    .regex(/^[a-zA-Z0-9._-]+$/, 'Only letters, numbers, dashes, dots, and underscores allowed')
+});
+```
+This forces naming rules corresponding to GitHub's repository formatting constraints before submission.
+
+---
+
+### 2. Immutable Default Repository Setting
+
+Only one repository can be marked as default. Rather than mutating states, we use immutable `.map()` copy loops to set `isDefault = true` for the chosen ID and `false` for all other repositories:
+```typescript
+const setDefaultRepository = (id: string) => {
+  setConnectedRepos((prev) =>
+    prev.map((r) => ({
+      ...r,
+      isDefault: r.id === id, // evaluates to true for chosen ID, false for others
+    }))
+  );
+};
+```
+This guarantees React changes are clean, functional, and easily detectable by re-renders.
+
+---
+
+### 3. Folder Strategy Previews
+
+Folder strategy uses a TypeScript Union type:
+```typescript
+type FolderStrategy = 'platform' | 'difficulty' | 'topic' | 'language' | 'flat';
+```
+When selected, a custom rendering component ([RepositoryStructurePreview.tsx](file:///d:/SyncForge-AI/frontend/src/features/repositories/components/RepositoryStructurePreview.tsx)) updates a mock directory tree visually.
+
+---
+
+### 4. Simulated Async Actions & Sync Retries
+
+*   **Manual Sync:** Transition status to `'syncing'`. Delay for 2 seconds using a `Promise` timeout, then set status to `'healthy'` and log a success history item.
+*   **Sync Retry:** Transition failed history status to `'pending'`. Delay for 1.5 seconds, then update to `'success'` and clear the target repository's error status.
+
+---
+
+### 5. Secure GitHub Token Handling
+
+*   **Critical Security Principle:** GitHub OAuth client secrets, client IDs, and user access tokens must **NEVER** be stored, retrieved, or manipulated directly inside React client code.
+*   **Secure OAuth Flow:**
+    ```
+    Browser (React) ---> Spring Boot API Controller ---> GitHub OAuth Token Exchange ---> Database Storage
+    ```
+    The Spring Boot backend performs OAuth handshakes, handles secret keys, signs requests, logs events, and keeps credentials securely in PostgreSQL environment variables, exposing zero tokens to the client.
+
+
 
 
 
