@@ -811,6 +811,71 @@ Recharts compiles interactive charts using declarative React elements:
 *   **`Tooltip`**: Renders dynamic popup overlays on hover. We override standard layouts to inject clean dark-mode styled cards.
 *   **`dataKey`**: Tells Recharts which property name in our array object represents the value to render.
 
+---
+
+## 15. Search, Filter, & Advanced Routing Architectures
+
+We built a problems explorer implementing URL query parameter syncing and dynamic pagination pipelines.
+
+### 1. Controlled Inputs and URL State Optimization
+
+#### A. Controlled Inputs
+Traditional HTML form inputs maintain their own internal state in the DOM. In React, we use **Controlled Components**, meaning the input's value is bound directly to React state (or URL parameter state):
+```tsx
+<input
+  value={searchQuery}
+  onChange={(e) => updateParams({ q: e.target.value })}
+/>
+```
+*   **How it works:** When a user types, the `onChange` event fires. This triggers `updateParams`, updating the React Router URL search parameters. React detects the URL change, triggers a re-render, and passes the updated value back to the input.
+*   **Benefits:** This ensures that React is always the single source of truth for form data, enabling instant operations like clearing inputs, validating inputs on-the-fly, or synchronizing inputs across different components.
+
+#### B. URL Search Parameters (`useSearchParams`)
+Instead of keeping search terms, filters, and page indexes in local `useState` variables, we store them directly in the URL query string:
+`/problems?q=Two+Sum&difficulty=Easy&page=1`
+*   **Why?**
+    1.  **Shareable Filters:** Users can copy the URL and share it. The recipient will see the exact same filtered problems list.
+    2.  **State Preservation:** Refreshing the web browser doesn't wipe out the search queries or filters.
+    3.  **History Navigation:** Storing filters in the URL allows browser back and forward button clicks to naturally undo or redo filtering operations.
+
+---
+
+### 2. Derived State & Caching Pipelines
+
+#### A. Derived State (Filter & Sort Pipeline)
+Rather than maintaining a separate `filteredProblems` array in state and updating it inside a `useEffect` loop, we calculate the filtered results on-the-fly during rendering. This is called **Derived State**.
+*   **Why?** Storing filtered lists in state creates duplicate data, increasing the risk of state desynchronization bugs. Calculating it on-the-fly ensures the filtered output is always in sync with the source list.
+
+#### B. Cache Memorization (`useMemo`)
+For computationally expensive operations (like searching, filtering, and sorting 20+ problems), calculating derived state on every re-render (e.g. when sidebar collapses) can impact performance.
+```typescript
+const filtered = useMemo(() => {
+  return runFilterPipeline(mockProblems, searchQuery, platform, difficulty);
+}, [searchQuery, platform, difficulty]);
+```
+*   **Why?** We wrap the pipeline inside `useMemo`. React will cache (memoize) the filtered array. On subsequent renders, if the dependencies (`searchQuery`, `platform`, `difficulty`) haven't changed, React skips recalculating the array and returns the cached result.
+*   **When NOT to use useMemo:** Avoid using `useMemo` for simple derivations (like `const totalCount = items.length`). The overhead of tracking dependency arrays in `useMemo` can outweigh the performance benefit for trivial computations.
+
+---
+
+### 3. Solution Details and Code Viewers
+
+#### A. Dynamic Route Segments (`useParams`)
+Dynamic routes like `/problems/:problemId` capture path segments. We retrieve the segment using `useParams()`:
+```typescript
+const { problemId } = useParams<{ problemId: string }>();
+```
+This is used to lookup the specific problem details from the data registry on the details page.
+
+#### B. Lightweight Clipboard Copies
+To copy the code to the clipboard, we use the browser's native **Clipboard API**:
+```typescript
+navigator.clipboard.writeText(code);
+```
+This is asynchronous and returns a promise. We toggle a temporary `copied` state boolean to show visual success checks for 2 seconds.
+*   **Lightweight Integration:** We render raw code text inside a standard HTML `<pre><code>` block with monospace fonts. This avoids pulling in heavy syntax-highlighting libraries (like Prism or Highlight.js) during the initial design phase, reducing initial bundle sizes.
+
+
 
 
 

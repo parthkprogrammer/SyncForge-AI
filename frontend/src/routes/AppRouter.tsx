@@ -9,6 +9,7 @@ import { Spinner } from '../components/ui/Spinner';
 // Lazy loading all pages to optimize initial bundle delivery
 const DashboardPage = lazy(() => import('../pages/Dashboard'));
 const ProblemsPage = lazy(() => import('../pages/Problems'));
+const ProblemDetailsPage = lazy(() => import('../pages/Problems/ProblemDetailsPage'));
 const AnalyticsPage = lazy(() => import('../pages/Analytics'));
 const AIAssistantPage = lazy(() => import('../pages/AIAssistant'));
 const NotesPage = lazy(() => import('../pages/Notes'));
@@ -38,6 +39,7 @@ export function AppRouter() {
             <Route path="/" element={<AppLayout />}>
               <Route index element={<DashboardPage />} />
               <Route path={ROUTE_PATHS.PROBLEMS} element={<ProblemsPage />} />
+              <Route path="/problems/:problemId" element={<ProblemDetailsPage />} />
               <Route path={ROUTE_PATHS.ANALYTICS} element={<AnalyticsPage />} />
               <Route path={ROUTE_PATHS.AI_ASSISTANT} element={<AIAssistantPage />} />
               <Route path={ROUTE_PATHS.NOTES} element={<NotesPage />} />
