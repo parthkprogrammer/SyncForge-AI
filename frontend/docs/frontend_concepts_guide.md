@@ -875,6 +875,60 @@ navigator.clipboard.writeText(code);
 This is asynchronous and returns a promise. We toggle a temporary `copied` state boolean to show visual success checks for 2 seconds.
 *   **Lightweight Integration:** We render raw code text inside a standard HTML `<pre><code>` block with monospace fonts. This avoids pulling in heavy syntax-highlighting libraries (like Prism or Highlight.js) during the initial design phase, reducing initial bundle sizes.
 
+---
+
+## 16. Data Visualization & Advanced Derived Analytics
+
+We built a data visualization dashboard displaying coding streak heatmaps and dynamic activity charts.
+
+### 1. Recharts & Chart Choice Principles
+
+We select distinct chart types to match the questions we need to answer, avoiding visual fluff:
+*   **Pie Chart / Donut Chart (`DifficultyDistributionChart.tsx` & `PlatformDistributionChart.tsx`)**: Used when showing parts of a whole (like ratios of total solved counts). We render a center count label overlay using absolute positioning to summarize totals immediately.
+*   **Area Chart (`ActivityTrendChart.tsx`)**: Selected to represent activity trends over time. We apply a linear color gradient to the area fill to create a modern visual look.
+*   **Bar Chart (`TopicMasteryChart.tsx` & `LanguageUsageChart.tsx`)**: Used when comparing discrete categories (like programming languages or algorithm topics). We use `layout="vertical"` for topic mastery to ensure category labels remain readable without truncating.
+
+#### Recharts Core Attributes
+*   **`ResponsiveContainer`**: Reads wrapper layout grids dynamically, adapting heights and widths automatically.
+*   **`tickFormatter`**: Formats raw scale ticks on-the-fly (e.g. appending percentage signs `%` to tick labels).
+*   **`dataKey`**: Tells Recharts which property in our data array object maps to the chart's value.
+
+---
+
+### 2. Custom Heatmap Visualizations
+
+Instead of importing heavy calendar heatmap libraries, we built a lightweight streak tracker:
+*   **Grid Column Flow (`grid-flow-col grid-rows-7`)**: Traverses columns left-to-right, placing days from Sunday to Saturday within 7 rows automatically.
+*   **Intensity Scaling**: Evaluates solved counts per day against intensity weights (0, 1, 2, 3, 4+) to assign color-coded backgrounds (`bg-slate-100`, `bg-primary-100`, `bg-primary-500`, etc.) dynamically.
+
+```
+Streak Grid Coordinate Flow:
+[Col 1 (Week 1): Row 1 (Sun) -> Row 7 (Sat)] ---> [Col 2 (Week 2): Row 1 (Sun) -> Row 7 (Sat)] ...
+```
+
+---
+
+### 3. Date-Range State & Advanced Derived Calculations
+
+#### A. Why Date-Range is Local State
+The selected date range (`7d`, `30d`, `90d`, `1y`, `all`) only affects the visual filters of the dashboard's statistics and charts. It is maintained in local state (`useState`) because it is not needed by other pages, keeping the global routing clean.
+
+#### B. Dynamic Derived Analytics
+Instead of storing different datasets for each date range, we keep a single chronologically sorted activity list in memory (`rawActivity`).
+When a date range changes:
+1.  **Date Filtering (`filterAnalyticsByDateRange`)**: Filters `rawActivity` on-the-fly to return only the subset of logs within the date range.
+2.  **Streak Computations (`calculateSummaryStats`)**: Analyzes the filtered logs to find active days, average solved rates, and streaks. It calculates streaks by counting consecutive active days backward from today.
+3.  **Topic Allocation**: Maps solves counts to Easy, Medium, Hard, and language subsets dynamically based on the total solved count.
+4.  **Productive Day Calculation**: Analyzes weekday indexes to determine which day of the week has the highest solved count.
+5.  **Caching (`useMemo`)**: Caches all calculations, preventing redundant recalculations when the page re-renders for unrelated reasons (like sidebar toggles).
+
+#### C. Spring Boot Backend Substitution Later
+When connecting to a Spring Boot backend:
+1.  We will replace the local `rawActivity` mock generator with an Axios query.
+2.  Rather than fetching a full year of raw logs and calculating stats client-side, the frontend will pass the selected date range as a query parameter (e.g., `/api/v1/analytics?range=30d`).
+3.  The Spring Boot backend will perform these calculations directly in PostgreSQL using database indexing, returning the summary metrics and chart datasets in a single JSON payload.
+
+
 
 
 
