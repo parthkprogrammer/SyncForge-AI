@@ -928,6 +928,81 @@ When connecting to a Spring Boot backend:
 2.  Rather than fetching a full year of raw logs and calculating stats client-side, the frontend will pass the selected date range as a query parameter (e.g., `/api/v1/analytics?range=30d`).
 3.  The Spring Boot backend will perform these calculations directly in PostgreSQL using database indexing, returning the summary metrics and chart datasets in a single JSON payload.
 
+---
+
+## 17. Interactive AI Assistants & State-Driven Conversational Architectures
+
+We built a modular, responsive AI coding assistant layout supporting conversation management, custom code copying, and mock RAG contexts.
+
+### 1. Chat State Architecture & Immutable Arrays
+
+A chat interface is essentially a representation of conversation logs and dynamic messages states:
+```typescript
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  status: 'sending' | 'complete' | 'error';
+}
+```
+*   **Immutable Array Updates:** In React, state must be treated as immutable. We never modify arrays directly (e.g. `messages.push(...)` is prohibited). Instead, we construct a shallow copy of the array appending the new message block:
+    ```typescript
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === activeId ? { ...c, messages: [...c.messages, userMessage] } : c
+      )
+    );
+    ```
+    This ensures that React detects the reference change, triggers a re-render, and updates the chat layout cleanly.
+
+---
+
+### 2. Auto-Resizing Inputs and DOM References (`useRef`)
+
+#### A. Controlled Textarea Auto-Resizing
+The chat input is a **Controlled Textarea**. To make the textarea grow dynamically as the user types long prompts, we use a DOM reference and height calculations inside a `useEffect` hook:
+```typescript
+useEffect(() => {
+  if (textareaRef.current) {
+    textareaRef.current.style.height = 'auto';
+    textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
+  }
+}, [value]);
+```
+*   **How it works:** We temporarily reset the height to `auto` to shrink the textarea if lines were deleted, then set the height to the scroll height (bounded by a max height of 180px).
+
+#### B. Auto-Scrolling (`scrollIntoView`)
+When new messages arrive or the AI is thinking, we want the page to automatically scroll to the bottom. We use a DOM reference at the bottom of the list and trigger `scrollIntoView` whenever the messages array length updates:
+```typescript
+export function useChatScroll<T>(dependency: T) {
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [dependency]);
+  return bottomRef;
+}
+```
+*   **Why `useRef`?** Unlike `useState`, updating `bottomRef.current` does not trigger a re-render. It is used purely to keep a reference to a DOM element, allowing us to scroll it without causing redundant render loops.
+
+---
+
+### 3. Service Mocking & Security Architecture
+
+#### A. Mock Service Isolation (`mockAIService.ts`)
+We created a mock service to handle prompt matching, simulating response latencies using timeouts, and generating structured markdown output.
+*   **Why?** This isolates presentation components from API logic. When connecting the backend later, we only need to replace `mockAIService.ts` with a production service calling our Spring Boot backend. The page component layout remains unchanged.
+
+#### B. API Keys Safety (Frontend vs. Backend Roles)
+*   **Critical Security Principle:** OpenAI, Anthropic, or Gemini API keys must **NEVER** be stored in client-side React code. Any client-side code can be inspected by users, exposing secret keys to theft.
+*   **RAG Architecture Flow:**
+    ```
+    React Frontend (Browser) ---> Spring Boot Controller (Backend) ---> AI/RAG Service ---> LLM Provider
+    ```
+    The React frontend calls our Spring Boot backend. The backend handles authentication, validates user roles, retrieves the user's coding context from PostgreSQL (RAG), and makes the LLM provider call securely using environment-stored API keys.
+
+
 
 
 
