@@ -13,6 +13,7 @@ const ProblemDetailsPage = lazy(() => import('../pages/Problems/ProblemDetailsPa
 const AnalyticsPage = lazy(() => import('../pages/Analytics'));
 const AIAssistantPage = lazy(() => import('../pages/AIAssistant'));
 const NotesPage = lazy(() => import('../pages/Notes'));
+const NoteDetailsPage = lazy(() => import('../pages/Notes/NoteDetailsPage'));
 const RepositoriesPage = lazy(() => import('../pages/Repositories'));
 const ProfilePage = lazy(() => import('../pages/Profile'));
 const SettingsPage = lazy(() => import('../pages/Settings'));
@@ -43,6 +44,7 @@ export function AppRouter() {
               <Route path={ROUTE_PATHS.ANALYTICS} element={<AnalyticsPage />} />
               <Route path={ROUTE_PATHS.AI_ASSISTANT} element={<AIAssistantPage />} />
               <Route path={ROUTE_PATHS.NOTES} element={<NotesPage />} />
+              <Route path="/notes/:noteId" element={<NoteDetailsPage />} />
               <Route path={ROUTE_PATHS.REPOSITORIES} element={<RepositoriesPage />} />
               <Route path={ROUTE_PATHS.PROFILE} element={<ProfilePage />} />
               <Route path={ROUTE_PATHS.SETTINGS} element={<SettingsPage />} />

@@ -1002,6 +1002,68 @@ We created a mock service to handle prompt matching, simulating response latenci
     ```
     The React frontend calls our Spring Boot backend. The backend handles authentication, validates user roles, retrieves the user's coding context from PostgreSQL (RAG), and makes the LLM provider call securely using environment-stored API keys.
 
+---
+
+## 18. Notes CRUD Workspaces & Reusable Form Architectures
+
+We built a revision notes workspace allowing developers to write, edit, delete, tag, and search review materials connected to code problems.
+
+### 1. Frontend CRUD & Local State hooks (`useNotes`)
+
+CRUD is a foundational concept representing:
+*   **Create:** Adding a new note object with a generated unique ID and timestamps.
+*   **Read:** Fetching and rendering note arrays (using a local React state).
+*   **Update:** Immutably updating a target note object matching its ID.
+*   **Delete:** Filtering out a target note to remove it.
+
+To keep concerns separated, we encapsulated stateful logic in a custom hook `useNotes.ts`:
+```typescript
+export function useNotes() {
+  const [notes, setNotes] = useState<Note[]>(() => { ... });
+  // CRUD actions: createNote, updateNote, deleteNote, toggleFavorite...
+  return { notes, createNote, updateNote, deleteNote, toggleFavorite };
+}
+```
+*   **Why use custom hooks?** By separating CRUD state operations from UI layout rendering, our page files ([NotesPage.tsx](file:///d:/SyncForge-AI/frontend/src/pages/Notes/NotesPage.tsx)) remain clean, lightweight, and focused solely on UI composition.
+*   **Local CRUD persistence:** We save and restore the notes state array to the browser's `localStorage` on modifications. This makes edits persistent across tab updates.
+
+---
+
+### 2. React Hook Form + Zod Validations
+
+React Hook Form and Zod validation schemas work together to handle user inputs:
+*   **React Hook Form:** Manages the form state, handles dirty state validation, prevents double submission, and aggregates errors.
+*   **Zod Schema:** Defines the validation rules (e.g. title requires min 3 chars, content requires min 10).
+*   **`@hookform/resolvers/zod`**: Serves as the connector, checking user entries against the Zod schema on submission and forwarding validation errors back to React Hook Form:
+
+```
+User Input ---> React Hook Form ---> Zod Schema Validator ---> If valid, onSubmit()
+                                                        ---> If invalid, show Red Errors
+```
+
+---
+
+### 3. Dynamic Routes Param Extraction (`useParams`)
+
+In [NoteDetailsPage.tsx](file:///d:/SyncForge-AI/frontend/src/pages/Notes/NoteDetailsPage.tsx), the note's ID is retrieved from the URL path:
+```typescript
+const { noteId } = useParams<{ noteId: string }>();
+```
+We query our local notes state to find the matching note object:
+```typescript
+const note = useMemo(() => notes.find((n) => n.id === noteId), [notes, noteId]);
+```
+If the note does not exist, we redirect the user back to the notes index page (`/notes`) using `useNavigate()`.
+
+---
+
+### 4. Database Persistence Later
+When connecting to a Spring Boot backend:
+1.  **Repository Layer:** We will create a `Note` entity in Java mapped to a `notes` table in PostgreSQL.
+2.  **REST APIs:** The frontend will replace local CRUD methods inside `useNotes` with Axios requests (`POST /api/v1/notes` for creations, `PUT /api/v1/notes/{id}` for edits, etc.).
+3.  **JPA & Hibernate:** The Spring Boot API will validate notes schemas server-side, persist modifications in PostgreSQL, and return updated records to the client.
+
+
 
 
 
