@@ -16,6 +16,7 @@ const NotesPage = lazy(() => import('../pages/Notes'));
 const NoteDetailsPage = lazy(() => import('../pages/Notes/NoteDetailsPage'));
 const RepositoriesPage = lazy(() => import('../pages/Repositories'));
 const ProfilePage = lazy(() => import('../pages/Profile'));
+const PublicProfilePage = lazy(() => import('../pages/Profile/PublicProfilePage'));
 const SettingsPage = lazy(() => import('../pages/Settings'));
 const LoginPage = lazy(() => import('../pages/Login'));
 const NotFoundPage = lazy(() => import('../pages/NotFound'));
@@ -56,7 +57,10 @@ export function AppRouter() {
             <Route path={ROUTE_PATHS.LOGIN} element={<LoginPage />} />
           </Route>
 
-          {/* 3. Global Catch-all Routing (404 Page Not Found) */}
+          {/* 3. Public Developer Portfolio Profile Route */}
+          <Route path="/u/:username" element={<PublicProfilePage />} />
+
+          {/* 4. Global Catch-all Routing (404 Page Not Found) */}
           <Route path="*" element={<NotFoundPage />} />
 
         </Routes>

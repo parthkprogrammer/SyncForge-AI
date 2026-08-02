@@ -1126,16 +1126,92 @@ When selected, a custom rendering component ([RepositoryStructurePreview.tsx](fi
     ```
     The Spring Boot backend performs OAuth handshakes, handles secret keys, signs requests, logs events, and keeps credentials securely in PostgreSQL environment variables, exposing zero tokens to the client.
 
+---
 
+## 20. Developer Profile Identity, Dynamic Score Completion, and Public Route Previews
 
+We built a developer profile setup dashboard and a shareable public portfolio route `/u/:username` enabling developers to display their coding activity and mastery levels.
 
+### 1. Unified Object State Updates (`useProfile`)
 
+Unlike arrays of items, a profile represents a single cohesive object:
+```typescript
+interface DeveloperProfile {
+  username: string;
+  displayName: string;
+  bio: string | null;
+  location: string | null;
+  website: string | null;
+  primaryLanguage: string;
+  profileVisibility: ProfileVisibility;
+}
+```
+When updating fields, we must preserve existing statistics and timestamps properties. We do this by shallow copying the previous state object:
+```typescript
+setProfile((prev) => ({
+  ...prev,
+  displayName: data.displayName,
+  username: data.username.toLowerCase(),
+  bio: data.bio.trim() || null,
+  // ...other fields
+}));
+```
+Preserving stats ensures streaks, total solved counts, and repository counts remain untouched.
 
+---
 
+### 2. Derived Calculations vs Stored State (`ProfileCompletion`)
 
+To prevent state synchronization bugs, profile completion metrics are derived dynamically on render:
+```typescript
+const completionScore = useMemo(() => {
+  let score = 0;
+  if (profile.avatarUrl) score += 15;
+  if (profile.bio) score += 15;
+  if (profile.location) score += 15;
+  if (profile.website) score += 15;
+  if (profile.primaryLanguage) score += 20;
+  if (isGitHubConnected) score += 20;
+  return score;
+}, [profile, isGitHubConnected]);
+```
+Deriving this value guarantees the percentage remains consistent without managing duplicate hook state triggers.
 
+---
 
+### 3. React Hook Form + Zod Form Validations
 
+Form controls inside [EditProfileDialog.tsx](file:///d:/SyncForge-AI/frontend/src/features/profile/components/EditProfileDialog.tsx) are validated against a Zod schema:
+```typescript
+const profileSchema = z.object({
+  displayName: z.string().min(2).max(50).trim(),
+  username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/, 'Letters, numbers, hyphens, and underscores only').trim(),
+  website: z.string().refine((val) => {
+    if (!val) return true;
+    try { new URL(val); return true; } catch { return false; }
+  }, { message: 'Must be a valid URL' })
+});
+```
+*   **Username Naming Constraints:** Rejects spaces and special symbols (e.g. `@` or `#`) to ensure safe URL parsing for portfolio paths.
+*   **Website URLs Checker:** Leverages JavaScript's native `new URL(val)` constructor inside a Zod `.refine()` block to ensure links are syntactically valid if entered.
+
+---
+
+### 4. Share Profiles Clipboard API
+
+We generate the share link dynamically using the browser's current `window.location.origin` and write it directly to the clipboard:
+```typescript
+const shareUrl = `${window.location.origin}/u/${profile.username}`;
+await navigator.clipboard.writeText(shareUrl);
+```
+We display a temporary toast checkmark to provide immediate visual feedback.
+
+---
+
+### 5. Private vs Public Profile Data Security
+
+*   **Security awareness warning:** Hiding components inside React using conditional statements (e.g. `{visibility === 'public' && <Email />}`) is **NOT** a secure authorization boundary. If the API payload includes private fields (like user emails or connected tokens), they are exposed in the browser's network inspect tab.
+*   **Server-Side Filtering:** The React frontend only handles UI details layouts. The Spring Boot backend decides which fields to return based on the requesting client's roles and profile visibility settings stored in PostgreSQL.
 
 
 
