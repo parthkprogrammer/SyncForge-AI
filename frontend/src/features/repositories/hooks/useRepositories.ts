@@ -198,7 +198,7 @@ export function useRepositories() {
         })
       );
       toast.success('Sync completed successfully!');
-    } catch (err) {
+    } catch {
       setConnectedRepos((prev) =>
         prev.map((r) => (r.id === id ? { ...r, syncStatus: 'error' } : r))
       );
@@ -234,9 +234,8 @@ export function useRepositories() {
           return r;
         })
       );
-
       toast.success('Sync retry simulated successfully!');
-    } catch (err) {
+    } catch {
       setSyncHistory((prev) =>
         prev.map((h) => (h.id === historyItemId ? { ...h, status: 'failed' } : h))
       );

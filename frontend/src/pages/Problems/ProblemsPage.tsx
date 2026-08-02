@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { ArrowUpDown } from 'lucide-react';
@@ -44,27 +44,29 @@ export default function ProblemsPage() {
   const pageSize = Number(searchParams.get('pageSize')) || 10;
 
   // 2. URL State Setters
-  const updateParams = (newParams: Partial<Record<string, string | number>>) => {
-    const current = new URLSearchParams(searchParams);
-    
-    Object.entries(newParams).forEach(([key, val]) => {
-      if (val === undefined || val === null || val === '') {
-        current.delete(key);
-      } else {
-        current.set(key, String(val));
+  const updateParams = useCallback((newParams: Partial<Record<string, string | number>>) => {
+    setSearchParams((prev) => {
+      const current = new URLSearchParams(prev);
+      
+      Object.entries(newParams).forEach(([key, val]) => {
+        if (val === undefined || val === null || val === '') {
+          current.delete(key);
+        } else {
+          current.set(key, String(val));
+        }
+      });
+
+      // Reset pagination to page 1 if any filter or query changes
+      const isFilterChange = Object.keys(newParams).some(
+        (key) => ['q', 'platform', 'difficulty', 'language', 'topic', 'syncStatus'].includes(key)
+      );
+      if (isFilterChange && !('page' in newParams)) {
+        current.set('page', '1');
       }
+
+      return current;
     });
-
-    // Reset pagination to page 1 if any filter or query changes
-    const isFilterChange = Object.keys(newParams).some(
-      (key) => ['q', 'platform', 'difficulty', 'language', 'topic', 'syncStatus'].includes(key)
-    );
-    if (isFilterChange && !('page' in newParams)) {
-      current.set('page', '1');
-    }
-
-    setSearchParams(current);
-  };
+  }, [setSearchParams]);
 
   const handleClearFilters = () => {
     setSearchParams(new URLSearchParams());
@@ -138,7 +140,7 @@ export default function ProblemsPage() {
     if (page > 1 && page > totalPages && totalPages > 0) {
       updateParams({ page: totalPages });
     }
-  }, [totalPages, page]);
+  }, [totalPages, page, updateParams]);
 
   const handleRetrySync = (problemTitle: string) => {
     alert(`Sync API will be connected later. Triggered retry sync for "${problemTitle}".`);

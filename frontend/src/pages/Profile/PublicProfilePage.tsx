@@ -30,20 +30,42 @@ export default function PublicProfilePage() {
   const { username } = useParams<{ username: string }>();
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check if profile exists in database simulation
+  const profileExists = useMemo(() => {
+    if (username?.toLowerCase() === 'alexdev') return true;
+    try {
+      const stored = localStorage.getItem('sf_profile');
+      if (stored) {
+        const parsed = JSON.parse(stored) as DeveloperProfile;
+        if (parsed.username.toLowerCase() === username?.toLowerCase()) {
+          return true;
+        }
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  }, [username]);
+
   // Load profile from localStorage if it matches, otherwise use default mock data
   const profile: DeveloperProfile = useMemo(() => {
-    const stored = localStorage.getItem('sf_profile');
-    if (stored) {
-      const parsed = JSON.parse(stored) as DeveloperProfile;
-      if (parsed.username.toLowerCase() === username?.toLowerCase()) {
-        return parsed;
+    if (profileExists) {
+      try {
+        const stored = localStorage.getItem('sf_profile');
+        if (stored) {
+          const parsed = JSON.parse(stored) as DeveloperProfile;
+          if (parsed.username.toLowerCase() === username?.toLowerCase()) {
+            return parsed;
+          }
+        }
+      } catch {
+        // Fallback below
       }
     }
-    // Default fallback
     const defaultProf = initialProfile();
     defaultProf.username = username || 'alexdev';
     return defaultProf;
-  }, [username]);
+  }, [username, profileExists]);
 
   // Loading skeleton simulation on mount
   useEffect(() => {
@@ -59,6 +81,38 @@ export default function PublicProfilePage() {
   const recentActivity = useMemo(() => initialRecentActivity(), []);
 
   const isPrivate = profile.profileVisibility === 'private';
+
+  if (!profileExists) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center select-none bg-slate-50 dark:bg-slate-950 text-slate-850 dark:text-white">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-850 p-8 rounded-2xl shadow-xl flex flex-col items-center">
+          <div className="h-14 w-14 rounded-full bg-rose-50 dark:bg-rose-955/10 text-rose-500 flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-extrabold tracking-tight">Profile Not Found</h2>
+          <p className="text-xs text-slate-450 dark:text-slate-400 mt-2.5 leading-relaxed">
+            The developer profile for <strong className="text-slate-750 dark:text-slate-200">@{username}</strong> could not be located in SyncForge AI.
+          </p>
+          <div className="flex gap-3 mt-6 w-full justify-center">
+            <Link
+              to="/profile"
+              className="w-1/2 inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-805 dark:hover:bg-slate-700 h-9 px-4 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-250 transition-colors"
+            >
+              Go to Profile Setup
+            </Link>
+            <Link
+              to="/"
+              className="w-1/2 inline-flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white h-9 px-4 rounded-xl text-xs font-bold transition-colors"
+            >
+              Go to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
